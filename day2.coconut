@@ -1,0 +1,36 @@
+with open('./inputs/day2.txt') as infile:
+  lines = infile.readlines()
+
+horizontal = 0
+depth = 0
+
+for line in lines:
+  direction, magnitudeR = line.strip().split()
+  magnitude = int(magnitudeR)
+  match direction:
+    case 'forward':
+      horizontal += magnitude
+    case 'up':
+      depth -= magnitude
+    case 'down':
+      depth += magnitude
+
+print(f'part 1 = {depth*horizontal}')
+# end part 1
+
+aim = 0
+horizontal = 0
+depth = 0
+for line in lines:
+  direction, magnitudeR = line.strip().split()
+  magnitude = int(magnitudeR)
+  match direction:
+    case 'forward':
+      horizontal += magnitude
+      depth += magnitude * aim
+    case 'down':
+      aim += magnitude
+    case 'up':
+      aim -= magnitude
+
+print(f'part 2 = {depth*horizontal}')
