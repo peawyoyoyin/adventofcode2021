@@ -1,0 +1,73 @@
+with open('./inputs/day3.txt') as infile:
+  lines = infile.readlines()
+
+ones = [0] * len(lines[0].strip())
+all_lines = len(lines)
+
+for line in lines:
+  for i, c in enumerate(line.strip()):
+    if c == '1':
+      ones[i] += 1
+
+gammaRaw = []
+epsilonRaw = []
+for one in ones:
+  if one > all_lines - one:
+    gammaRaw.append(1)
+    epsilonRaw.append(0)
+  else:
+    gammaRaw.append(0)
+    epsilonRaw.append(1)
+
+gamma = 0
+epsilon = 0
+
+for gammaBit in gammaRaw:
+  gamma *= 2
+  gamma += gammaBit
+
+for epsilonBit in epsilonRaw:
+  epsilon *= 2
+  epsilon += epsilonBit
+
+print(f'part 1 = {gamma * epsilon}')
+
+# o2
+remaining = lines |> map$(.strip()) |> list
+bitIndex = 0
+
+while len(remaining) > 1:
+  all_remaining = len(remaining)
+  ones_at_bit = remaining |> filter$(l -> l[bitIndex] == '1') |> list |> len
+  zeroes_at_bit = all_remaining - ones_at_bit
+  if ones_at_bit >= zeroes_at_bit:
+    remaining = remaining |> filter$(l -> l[bitIndex] == '1') |> list
+  else:
+    remaining = remaining |> filter$(l -> l[bitIndex] == '0') |> list
+  bitIndex += 1
+
+o2 = remaining[0]
+# co2
+remaining = lines |> map$(.strip()) |> list
+bitIndex = 0
+
+while len(remaining) > 1:
+  all_remaining = len(remaining)
+  ones_at_bit = remaining |> filter$(l -> l[bitIndex] == '1') |> list |> len
+  zeroes_at_bit = all_remaining - ones_at_bit
+  if zeroes_at_bit <= ones_at_bit:
+    remaining = remaining |> filter$(l -> l[bitIndex] == '0') |> list
+  else:
+    remaining = remaining |> filter$(l -> l[bitIndex] == '1') |> list
+  bitIndex += 1
+
+co2 = remaining[0]
+def binStrToDec(binStr):
+  ans = 0
+  for c in binStr:
+    ans *= 2
+    if c == '1':
+      ans += 1
+  return ans
+print(f'part 2 = {binStrToDec(o2) * binStrToDec(co2)}')
+# print(f'part 2 = {o2genDec*co2scrubDec}')
