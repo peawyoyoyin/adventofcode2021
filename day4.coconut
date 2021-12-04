@@ -1,0 +1,60 @@
+with open('./inputs/day4.txt') as infile:
+  calls = infile.readline().strip().split(',') |> map$(int) |> list
+  infile.readline()
+  lines = infile.readlines()
+  boards = []
+  board = []
+
+  for line in lines:
+    if len(line.strip()) == 0:
+      boards.append(board)
+      board = []
+    else:
+      board.append(line.strip().split() |> map$(int) |> list)
+
+  # last board
+  boards.append(board)
+
+board_indexes = []
+for board in boards:
+  board_index = {}
+  for y, row in enumerate(board):
+    for x, el in enumerate(row):
+      board_index[el] = (y, x)
+  board_indexes.append(board_index)
+
+board_marks = [set() for _ in boards]
+board_row_marked = [[0] * len(board) for board in boards]
+board_col_marked = [[0] * len(board[0]) for board in boards]
+boards_left = len(boards)
+boards_win = [False for _ in boards]
+
+part1_ans = None
+part2_ans = None
+while boards_left > 0:
+  call = calls.pop(0)
+  for i, board in enumerate(boards):
+    if boards_win[i]:
+      continue
+    if call in board_indexes[i]:
+      y, x = board_indexes[i][call]
+      if (y, x) not in board_marks[i]:
+        board_marks[i].add((y, x))
+        board_row_marked[i][y] += 1
+        board_col_marked[i][x] += 1
+        if board_row_marked[i][y] == 5 or board_col_marked[i][x] == 5:
+          # win
+          boards_left -= 1
+          boards_win[i] = True
+          sum_unmarked = 0
+          for r, row in enumerate(board):
+            for c, col in enumerate(row):
+              if (r, c) not in board_marks[i]:
+                sum_unmarked += col
+          score = sum_unmarked * call
+          if part1_ans is None:
+            part1_ans = score
+          part2_ans = score
+
+print(f'part 1 = {part1_ans}')
+print(f'part 2 = {part2_ans}')
