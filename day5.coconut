@@ -1,0 +1,137 @@
+def parse_line(line):
+  tokens = line.strip().split(' -> ')
+  pairs = tokens |> map$(.split(',')) |> list
+  return pairs |> map$(p -> map(int, p) |> tuple) |> tuple
+
+def straight_line(pair):
+  line_start, line_end = pair
+  start_x, start_y = line_start
+  end_x, end_y = line_end
+
+  return start_x == end_x or start_y == end_y
+
+def is_vertical(pair):
+  line_start, line_end = pair
+  start_x, start_y = line_start
+  end_x, end_y = line_end
+
+  return start_x == end_x
+
+def is_horizontal(pair):
+  line_start, line_end = pair
+  start_x, start_y = line_start
+  end_x, end_y = line_end
+
+  return start_y == end_y
+
+def interval_intersect(interval1, interval2):
+  s1, e1 = interval1
+  s2, e2 = interval2
+
+  if s1 > e1:
+    s1, e1 = e1, s1
+  if s2 > e2:
+    s2, e2 = e2, s2
+
+  if e1 < s2 or e2 < s1:
+    return []
+
+  return range(max(s1, s2), min(e1, e2)+1) |> list
+
+def straight_line_intersect(pair1, pair2):
+  start1, end1 = pair1
+  start2, end2 = pair2
+  
+  s1x, s1y = start1
+  e1x, e1y = end1
+  s2x, s2y = start2
+  e2x, e2y = end2
+
+  match (is_vertical(pair1), is_vertical(pair2)):
+    case (True, True):
+      # s1x == e1x, s2x == e2x implicitly
+      return [(s1x, iy) for iy in interval_intersect((s1y, e1y), (s2y, e2y))] if s1x == s2x else [] 
+    case (False, False):
+      # s1y == e1y, s2y == e2y implicitly
+      return [(ix, s1y) for ix in interval_intersect((s1x, e1x), (s2x, e2x))] if s1y == s2y else []
+    case (True, False):
+      if s2x > e2x:
+        s2x, e2x = e2x, s2x
+      if s1y > e1y:
+        s1y, e1y = e1y, s1y
+      
+      return [(s1x, s2y)] if s2x <= s1x <= e2x and s1y <= s2y <= e1y else []
+    case (False, True):
+      if s2y > e2y:
+        s2y, e2y = e2y, s2y
+      if s1x > e1x:
+        s1x, e1x = e1x, s1x
+      
+      return [(s2x, s1y)] if s2y <= s1y <= e2y and s1x <= s2x <= e2x else []
+
+with open('./inputs/day5.txt') as infile:
+  lines = infile.readlines() |> map$(parse_line) |> list
+
+straight_lines = lines |> filter$(straight_line) |> list
+
+grid = [[0] * 1000 for _ in range(1000)] # grid[y][x]
+for line in straight_lines:
+  start, end = line
+  sx, sy = start
+  ex, ey = end
+  if is_vertical(line):
+    if sy > ey:
+      sy, ey = ey, sy
+    
+    for i in range(sy, ey + 1):
+      grid[i][sx] += 1
+  else: # is horizontal
+    if sx > ex:
+      sx, ex = ex, sx
+    for i in range(sx, ex + 1):
+      grid[sy][i] += 1
+
+intersections = 0
+for row in grid:
+  for col in row:
+    if col > 1:
+      intersections += 1
+print(f'part 1 = {intersections}')
+# end part 1
+
+grid = [[0] * 1000 for _ in range(1000)]
+for line in lines:
+  start, end = line
+  sx, sy = start
+  ex, ey = end
+
+  if is_vertical(line):
+    if sy > ey:
+      sy, ey = ey, sy
+    
+    for i in range(sy, ey + 1):
+      grid[i][sx] += 1
+  elif is_horizontal(line):
+    if sx > ex:
+      sx, ex = ex, sx
+    for i in range(sx, ex + 1):
+      grid[sy][i] += 1
+  else:
+    x, y = sx, sy
+
+    dirX = (ex - sx) // abs(ex - sx)
+    dirY = (ey - sy) // abs(ey - sy)
+
+    while x != ex:
+      grid[y][x] += 1
+      x += dirX
+      y += dirY
+    # last point
+    grid[y][x] += 1
+
+intersections = 0
+for row in grid:
+  for col in row:
+    if col > 1:
+      intersections += 1
+print(f'part 2 = {intersections}')
