@@ -24,51 +24,6 @@ def is_horizontal(pair):
 
   return start_y == end_y
 
-def interval_intersect(interval1, interval2):
-  s1, e1 = interval1
-  s2, e2 = interval2
-
-  if s1 > e1:
-    s1, e1 = e1, s1
-  if s2 > e2:
-    s2, e2 = e2, s2
-
-  if e1 < s2 or e2 < s1:
-    return []
-
-  return range(max(s1, s2), min(e1, e2)+1) |> list
-
-def straight_line_intersect(pair1, pair2):
-  start1, end1 = pair1
-  start2, end2 = pair2
-  
-  s1x, s1y = start1
-  e1x, e1y = end1
-  s2x, s2y = start2
-  e2x, e2y = end2
-
-  match (is_vertical(pair1), is_vertical(pair2)):
-    case (True, True):
-      # s1x == e1x, s2x == e2x implicitly
-      return [(s1x, iy) for iy in interval_intersect((s1y, e1y), (s2y, e2y))] if s1x == s2x else [] 
-    case (False, False):
-      # s1y == e1y, s2y == e2y implicitly
-      return [(ix, s1y) for ix in interval_intersect((s1x, e1x), (s2x, e2x))] if s1y == s2y else []
-    case (True, False):
-      if s2x > e2x:
-        s2x, e2x = e2x, s2x
-      if s1y > e1y:
-        s1y, e1y = e1y, s1y
-      
-      return [(s1x, s2y)] if s2x <= s1x <= e2x and s1y <= s2y <= e1y else []
-    case (False, True):
-      if s2y > e2y:
-        s2y, e2y = e2y, s2y
-      if s1x > e1x:
-        s1x, e1x = e1x, s1x
-      
-      return [(s2x, s1y)] if s2y <= s1y <= e2y and s1x <= s2x <= e2x else []
-
 with open('./inputs/day5.txt') as infile:
   lines = infile.readlines() |> map$(parse_line) |> list
 
