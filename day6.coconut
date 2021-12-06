@@ -1,0 +1,26 @@
+from collections import Counter
+import heapq as h
+
+with open('./inputs/day6.txt') as infile:
+  ages = infile.readline().split(',') |> map$(int) |> list
+
+counts = Counter(ages)
+q = [0] * 9
+for k, v in counts.items():
+  q[k] += v
+
+for i in range(80):
+  top = q.pop(0)
+  q.append(0)
+  q[6] += top
+  q[8] += top
+
+print(f'part 1 = {sum(q)}')
+
+for i in range(80, 256):
+  top = q.pop(0)
+  q.append(0)
+  q[6] += top
+  q[8] += top
+
+print(f'part 2 = {sum(q)}')
