@@ -1,0 +1,28 @@
+import statistics as stats
+import math as m
+
+with open('./inputs/day7.txt') as infile:
+  positions = infile.readline().strip().split(',') |> map$(int) |> list
+
+candidates = set()
+mean = positions |> stats.mean
+candidates.update( [m.floor(mean), m.ceil(mean)] )
+
+median = positions |> stats.median
+candidates.update( [m.floor(median), m.ceil(median)] )
+
+mode = positions |> stats.mode
+candidates.update( [m.floor(mode), m.ceil(mode)] )
+
+absolute_deviation = k -> positions |> map$(e -> abs(e - k)) |> sum
+part1_ans = candidates |> map$(absolute_deviation) |> min
+print(f'part 1 = {part1_ans}')
+# part 1
+
+def dist(a, b):
+  N = abs(b-a)
+  return (N * (N + 1)) // 2
+
+fuel_cost = k -> positions |> map$(e -> dist(e, k)) |> sum
+part2_ans = range(min(positions), max(positions)) |> map$(fuel_cost) |> min
+print(f'part 2 = {part2_ans}')
