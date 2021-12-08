@@ -1,0 +1,96 @@
+# segments:
+#  aa
+# b  c
+# b  c
+#  dd
+# e  f
+# e  f
+#  gg
+
+# original active segments:
+# 1: cf     (2)
+# 7: acf    (3)
+# 4: bcdf   (4)
+# 8: abcdefg(7)
+# 2: acdeg  (5)
+# 3: acdfg  (5)
+# 5: abdfg  (5)
+# 0: abcefg (6)
+# 6: abdefg (6)
+# 9: abcdfg (6)
+
+def parse_line(line):
+  signalsRaw, outputsRaw = line.strip().split(' | ')
+  signals = signalsRaw.split() |> map$(token -> token |> sorted |> ''.join) |> tuple
+  outputs = outputsRaw.split() |> map$(token -> token |> sorted |> ''.join) |> tuple
+  return (signals, outputs)
+
+with open('./inputs/day8.txt') as infile:
+  inputs = infile.readlines() |> map$(parse_line) |> list
+
+part1_ans = 0
+def signal_with_length(length, signals) = signals |> filter$(l -> len(l) == length)
+for signal, output in inputs:
+  signal_1 = output |> signal_with_length$(2) |> list |> len
+  signal_4 = output |> signal_with_length$(4) |> list |> len
+  signal_7 = output |> signal_with_length$(3) |> list |> len
+  signal_8 = output |> signal_with_length$(7) |> list |> len
+
+  part1_ans += signal_1 + signal_4 + signal_7 + signal_8
+
+print(f'part 1 = {part1_ans}')
+# end part 1
+
+def to_segments(signals) = signals |> map$(set) |> list
+def filter_by_segment_length(length, signals) = signals |> signal_with_length$(length) |> to_segments
+def segs_to_sig(segments) = segments |> list |> sorted |> ''.join 
+def map_values(f, d) = { k: f(v) for k, v in d.items() }
+def reverse_map(d) = { v: k for k, v in d.items() }
+def find_mapping(signals):
+  sig1 = signals |> filter_by_segment_length$(2) |> .[0]
+  sig4 = signals |> filter_by_segment_length$(4) |> .[0]
+  sig7 = signals |> filter_by_segment_length$(3) |> .[0]
+  sig8 = signals |> filter_by_segment_length$(7) |> .[0]
+  
+  segs5 = signals |> filter_by_segment_length$(5) # 2 or 3 or 5
+  segs6 = signals |> filter_by_segment_length$(6) # 0 or 6 or 9
+
+  segA = sig7 - sig1 |> list |> .[0]
+
+  diff8 = segs6 |> map$(s -> sig8 - s) |> list
+  segC = diff8 |> map$(s -> s & sig1) |> filter$(len) |> next |> list |> .[0]
+  segF = sig1 - set([segC]) |> list |> .[0]
+
+  sig3 = segs5 |> filter$(segs -> segC in segs and segF in segs) |> list |> .[0]
+  sig2 = segs5 |> filter$(segs -> segC in segs and segF not in segs) |> list |> .[0]
+  sig5 = segs5 |> filter$(segs -> segF in segs and segC not in segs) |> list |> .[0]
+
+  segE = sig2 - sig3 |> list |> .[0]
+  
+  sig0 = segs6 |> filter$(segs -> segC in segs and segF in segs and segE in segs) |> list |> .[0]
+  sig6 = segs6 |> filter$(segs -> segF in segs and segC not in segs) |> list |> .[0]
+  sig9 = segs6 |> filter$(segs -> segE not in segs) |> list |> .[0]
+
+  return {
+    '0': sig0,
+    '1': sig1,
+    '2': sig2,
+    '3': sig3,
+    '4': sig4,
+    '5': sig5,
+    '6': sig6,
+    '7': sig7,
+    '8': sig8,
+    '9': sig9
+  } |> map_values$(segs_to_sig) |> reverse_map
+
+# print(find_mapping('egcafb adgecf caebf fdgbaec fbaed cebg facbgd cfe fgabc ec'.split() |> map$(token -> token |> sorted |> ''.join)))
+
+part2_ans = 0
+for signals, output in inputs:
+  mapping = find_mapping(signals)
+  # print(signals, mapping)
+  decoded = output |> map$(o -> mapping[o]) |> list |> ''.join
+  part2_ans += int(decoded)
+
+print(f'part 2 = {part2_ans}')
