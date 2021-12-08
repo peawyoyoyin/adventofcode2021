@@ -55,8 +55,6 @@ def find_mapping(signals):
   segs5 = signals |> filter_by_segment_length$(5) # 2 or 3 or 5
   segs6 = signals |> filter_by_segment_length$(6) # 0 or 6 or 9
 
-  segA = sig7 - sig1 |> list |> .[0]
-
   diff8 = segs6 |> map$(s -> sig8 - s) |> list
   segC = diff8 |> map$(s -> s & sig1) |> filter$(len) |> next |> list |> .[0]
   segF = sig1 - set([segC]) |> list |> .[0]
