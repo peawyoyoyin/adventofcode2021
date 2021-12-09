@@ -1,0 +1,43 @@
+from collections import deque, defaultdict
+with open('./inputs/day9.txt') as infile:
+  heights = infile.readlines() |> map$(l -> l.strip() |> map$(int) |> list) |> list
+
+maxR = len(heights)
+maxC = len(heights[0])
+
+adj_diffs = [ (1, 0), (-1, 0), (0, 1), (0, -1) ] # (rowdiff, coldiff)
+def valid_point(row, col) = 0 <= row < maxR and 0 <= col < maxC
+def adj_points(row, col) = adj_diffs |> map$(def ((dr, dc)) -> (dr + row, dc + col)) |> filter$(p -> p |*> valid_point) |> list
+def is_low_point(row, col) = adj_points(row, col) |> map$(def ((r, c)) -> heights[r][c] > heights[row][col]) |> all
+def risk_level(row, col) = 1 + heights[row][col]
+
+yield def range2d(minR, maxR, minC, maxC):
+  for r in range(minR, maxR):
+    for c in range(minC, maxC):
+      yield (r, c)
+
+low_points = range2d(0, maxH, 0, maxW) |> filter$(p -> p |*> is_low_point) |> list   
+part1_ans = low_points |> map$(p -> p |*> risk_level) |> sum
+print(f'part 1 = {part1_ans}')
+# end part 1
+
+# classic DFS
+stack = deque(low_points |> enumerate) # (basin_id, low_point_coord)
+
+visited = set()
+basin_sizes = defaultdict(-> 0)
+
+while len(stack) > 0:
+  basin_id, coord = stack.popleft()
+  if coord in visited:
+    continue
+  row, col = coord
+  height_at_coord = heights[row][col]
+  basin_sizes[basin_id] += 1
+  visited.add(coord)
+
+  coord |*> adj_points |> filter$(def ((r, c)) -> height_at_coord < heights[r][c] < 9 and (r, c) not in visited) |> map$(p -> (basin_id, p)) |> stack.extendleft
+
+product = reduce$(*)
+part2_ans = basin_sizes.values() |> sorted$(?, reverse=True) |> .[:3] |> product # product of top 3
+print(f'part 2 = {part2_ans}')
