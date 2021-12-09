@@ -16,7 +16,7 @@ yield def range2d(minR, maxR, minC, maxC):
     for c in range(minC, maxC):
       yield (r, c)
 
-low_points = range2d(0, maxH, 0, maxW) |> filter$(p -> p |*> is_low_point) |> list   
+low_points = range2d(0, maxR, 0, maxC) |> filter$(p -> p |*> is_low_point) |> list   
 part1_ans = low_points |> map$(p -> p |*> risk_level) |> sum
 print(f'part 1 = {part1_ans}')
 # end part 1
@@ -36,7 +36,10 @@ while len(stack) > 0:
   basin_sizes[basin_id] += 1
   visited.add(coord)
 
-  coord |*> adj_points |> filter$(def ((r, c)) -> height_at_coord < heights[r][c] < 9 and (r, c) not in visited) |> map$(p -> (basin_id, p)) |> stack.extendleft
+  coord |*> adj_points \
+    |> filter$(def ((r, c)) -> height_at_coord < heights[r][c] < 9 and (r, c) not in visited) \
+    |> map$(p -> (basin_id, p)) \
+    |> stack.extendleft
 
 product = reduce$(*)
 part2_ans = basin_sizes.values() |> sorted$(?, reverse=True) |> .[:3] |> product # product of top 3
