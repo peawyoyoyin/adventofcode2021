@@ -1,0 +1,71 @@
+from collections import deque
+
+with open('./inputs/day10.txt') as infile:
+  lines = infile.readlines() |> map$(.strip()) |> list
+
+opening_chars = set([
+  '(', '[', '<', '{'
+])
+closing_pairs = {
+  ')': '(',
+  ']': '[',
+  '>': '<',
+  '}': '{'
+}
+illegal_character_scores = {
+  ')': 3,
+  ']': 57,
+  '}': 1197,
+  '>': 25137
+}
+
+def first_illegal_character(line):
+  stack = deque()
+  for i, c in line |> enumerate:
+    match c:
+      case c if c in opening_chars:
+        stack.appendleft(c)
+      case c if c in closing_pairs:
+        if len(stack) == 0 or stack[0] != closing_pairs[c]:
+          return c
+        else:
+          stack.popleft()
+      case g:
+        raise MatchError(f'unknown character {g}?')
+  return None
+part1_ans = lines |> map$(first_illegal_character..>illegal_character_scores.get$(?, 0)) |> sum
+print(f'part 1 = {part1_ans}')
+# end part 1
+
+def is_incomplete_line(line) = first_illegal_character(line) is None
+closing_pairs_rv = { v: k for k, v in closing_pairs.items() }
+def missing_brackets(line):
+  stack = deque()
+  for i, c in line |> enumerate:
+    match c:
+      case c if c in opening_chars:
+        stack.appendleft(c)
+      case c if c in closing_pairs:
+        assert len(stack) != 0, (line, i, c)
+        assert stack[0] == closing_pairs[c], (line, i, c)
+        stack.popleft()
+      case g:
+        raise MatchError(f'unknown character {g}?')
+  result = deque()
+
+  while len(stack) > 0:
+    result.append(closing_pairs_rv[stack.popleft()])
+  return result |> ''.join
+
+closing_bracket_scores = {
+  ')': 1,
+  ']': 2,
+  '}': 3,
+  '>': 4
+}
+def autocomplete_score(closing_brackets) = closing_brackets |> reduce$((a, b) -> 5*a + closing_bracket_scores[b], ?, 0)
+
+incomplete_lines = lines |> filter$(is_incomplete_line)
+autocomplete_scores = incomplete_lines |> map$(missing_brackets..>autocomplete_score) |> sorted |> list
+part2_ans = autocomplete_scores[len(autocomplete_scores) // 2]
+print(f'part 2 = {part2_ans}')
