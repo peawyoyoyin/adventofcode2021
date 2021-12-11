@@ -1,0 +1,47 @@
+from collections import deque
+
+with open('./inputs/day11.txt') as infile:
+  powers = infile.readlines() |> map$(.strip()..>map$(int)..>list)..>list
+
+yield def range2d(minR, maxR, minC, maxC):
+  for r in range(minR, maxR):
+    for c in range(minC, maxC):
+      yield (r, c)
+
+def is_valid_point((row, col)) = 0 <= row < 10 and 0 <= col < 10
+adj_diffs = range2d(-1, 2, -1, 2) |> filter$(p -> p != (0, 0))..>list
+def zip_add(a, b) = zip(a, b) |> map$(e -> e |*> (+)) |> tuple
+def adj_points(row, col) = adj_diffs |> map$(zip_add$((row, col)))..>filter$(is_valid_point)
+
+steps = 100
+flashes = 0
+all_flash = None
+step = 0
+while all_flash is None:
+  q = range2d(0, 10, 0, 10) |> deque
+  flashed = set()
+
+  while len(q) > 0:
+    top = q.popleft()
+    r, c = top
+    powers[r][c] += 1
+    
+    if powers[r][c] > 9 and (r, c) not in flashed:
+      flashed.add((r, c))
+      neighbors = adj_points(r, c)
+      neighbors |> q.extend
+
+  if range2d(0, 10, 0, 10) |> map$(def ((r, c)) -> powers[r][c] > 9) |> all and all_flash is None:
+    all_flash = step+1
+
+  for r, c in range2d(0, 10, 0, 10):
+    if powers[r][c] > 9:
+      powers[r][c] = 0
+      if step < 100:
+        flashes += 1
+  step += 1
+
+part1_ans = flashes
+part2_ans = all_flash
+print(f'part 1 = {part1_ans}')
+print(f'part 2 = {part2_ans}')
