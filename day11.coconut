@@ -3,13 +3,11 @@ from collections import deque
 with open('./inputs/day11.txt') as infile:
   powers = infile.readlines() |> map$(.strip()..>map$(int)..>list)..>list
 
-yield def range2d(minR, maxR, minC, maxC):
-  for r in range(minR, maxR):
-    for c in range(minC, maxC):
-      yield (r, c)
+def multirange((minV, maxV)) = range(minV, maxV) |> map$(e -> (e,))
+addpattern def multirange((minV, maxV), *intervals) = ((i, ) + el for i in range(minV, maxV) for el in multirange(*intervals))
 
 def is_valid_point((row, col)) = 0 <= row < 10 and 0 <= col < 10
-adj_diffs = range2d(-1, 2, -1, 2) |> filter$(p -> p != (0, 0))..>list
+adj_diffs = multirange((-1, 2), (-1, 2)) |> filter$(p -> p != (0, 0))..>list
 def zip_add(*pts) = zip(*pts) |> map$(e -> e |*> (+)) |> tuple
 def adj_points(row, col) = adj_diffs |> map$(zip_add$((row, col)))..>filter$(is_valid_point)
 
@@ -18,7 +16,7 @@ flashes = 0
 all_flash = None
 step = 0
 while all_flash is None:
-  q = range2d(0, 10, 0, 10) |> deque
+  q = multirange((0, 10), (0, 10)) |> deque
   flashed = set()
 
   while len(q) > 0:
@@ -31,10 +29,10 @@ while all_flash is None:
       neighbors = adj_points(r, c)
       neighbors |> q.extend
 
-  if range2d(0, 10, 0, 10) |> map$(def ((r, c)) -> powers[r][c] > 9) |> all and all_flash is None:
+  if multirange((0, 10), (0, 10)) |> map$(def ((r, c)) -> powers[r][c] > 9) |> all and all_flash is None:
     all_flash = step+1
 
-  for r, c in range2d(0, 10, 0, 10):
+  for r, c in multirange((0, 10), (0, 10)):
     if powers[r][c] > 9:
       powers[r][c] = 0
       if step < 100:
