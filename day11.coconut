@@ -10,7 +10,7 @@ yield def range2d(minR, maxR, minC, maxC):
 
 def is_valid_point((row, col)) = 0 <= row < 10 and 0 <= col < 10
 adj_diffs = range2d(-1, 2, -1, 2) |> filter$(p -> p != (0, 0))..>list
-def zip_add(a, b) = zip(a, b) |> map$(e -> e |*> (+)) |> tuple
+def zip_add(*pts) = zip(*pts) |> map$(e -> e |*> (+)) |> tuple
 def adj_points(row, col) = adj_diffs |> map$(zip_add$((row, col)))..>filter$(is_valid_point)
 
 steps = 100
