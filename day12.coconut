@@ -1,0 +1,63 @@
+from collections import defaultdict
+
+with open('./inputs/day12.txt') as infile:
+  relations = infile.readlines() |> map$(.strip()..>.split('-')..>tuple)
+adjs = defaultdict(list)
+
+for v1, v2 in relations:
+  adjs[v1].append(v2)
+  adjs[v2].append(v1)
+
+def is_big(cave) = cave |> map$(p -> ord('A') <= ord(p) < ord('Z')) |> all
+
+visited = set()
+ways = 0
+level = 0
+
+def search(cave):
+  global ways
+  if cave == 'end':
+    ways += 1
+    return
+  if not is_big(cave):
+    visited.add(cave)
+  for adj_cave in adjs[cave]:
+    if adj_cave not in visited:
+      search(adj_cave)
+  if not is_big(cave):
+    visited.remove(cave)
+
+search('start')
+part1_ans = ways
+print(f'part 1 = {part1_ans}')
+
+visited2 = defaultdict(->0)
+double_visit = None
+ways2 = 0
+def search2(cave, paths):
+  global ways2
+  global double_visit
+  if cave == 'end':
+    ways2 += 1
+    return
+  if not is_big(cave):
+    visited2[cave] += 1
+  for adj_cave in adjs[cave]:
+    if adj_cave == 'start':
+      continue
+    if double_visit is None:
+      if visited2[adj_cave] == 1:
+        double_visit = adj_cave
+        search2(adj_cave, paths+[cave])
+        double_visit = None
+      elif visited2[adj_cave] == 0:
+        search2(adj_cave, paths+[cave])
+    elif visited2[adj_cave] == 0:
+      search2(adj_cave, paths+[cave])
+  if not is_big(cave):
+    visited2[cave] -= 1
+
+search2('start', [])
+
+part2_ans = ways2
+print(f'part 2 = {part2_ans}')
