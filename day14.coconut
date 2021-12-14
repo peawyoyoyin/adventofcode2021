@@ -8,9 +8,8 @@ with open('./inputs/day14.txt') as infile:
 alphabets = set(polymer_template)
 
 yield def polymerization(initial_polymer):
-  element_counts = Counter({ letter: 0 for letter in alphabets })
-  element_counts.update(initial_polymer)
-  pair_counts = zip(initial_polymer, initial_polymer[1:]) |> map$(''.join) |> Counter
+  element_counts = Counter(initial_polymer)
+  pair_counts = zip(initial_polymer, initial_polymer[1:]) |> map$(''.join)..>Counter
   while True:
     yield element_counts.copy()
     next_pair_counts = Counter()
