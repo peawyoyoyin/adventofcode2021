@@ -1,0 +1,42 @@
+from collections import Counter
+
+with open('./inputs/day14.txt') as infile:
+  polymer_template = infile.readline().strip()
+  infile.readline()
+  pair_insertion_rules = infile.readlines() |> map$(.strip()..>.split(' -> '))..>dict
+
+alphabets = set(polymer_template)
+
+yield def polymerization(initial_polymer):
+  element_counts = Counter({ letter: 0 for letter in alphabets })
+  element_counts.update(initial_polymer)
+  pair_counts = zip(initial_polymer, initial_polymer[1:]) |> map$(''.join) |> Counter
+  while True:
+    yield element_counts.copy()
+    next_pair_counts = Counter()
+
+    for pair, pair_count in pair_counts.items():
+      p1, p2 = pair
+      inserted = pair_insertion_rules[p1+p2]
+      next_pair_counts[p1+inserted] += pair_count
+      next_pair_counts[inserted+p2] += pair_count
+      element_counts[inserted] += pair_count
+    pair_counts = next_pair_counts
+
+process = polymerization(polymer_template)
+after_step_10 = process$[10]
+
+counts = after_step_10.most_common()
+most_common_el, most_common_qt = counts[0]
+least_common_el, least_common_qt = counts[-1]
+part1_ans = most_common_qt - least_common_qt
+print(f'part 1 = {part1_ans}')
+
+process = polymerization(polymer_template)
+after_step_40 = process$[40]
+
+counts = after_step_40.most_common()
+most_common_el, most_common_qt = counts[0]
+least_common_el, least_common_qt = counts[-1]
+part2_ans = most_common_qt - least_common_qt
+print(f'part 2 = {part2_ans}')
