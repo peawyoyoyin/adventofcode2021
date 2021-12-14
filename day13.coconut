@@ -1,0 +1,52 @@
+def parse_fold(line):
+  tokens = line.strip().split()
+  assert tokens |> len == 3
+  assert (tokens[0], tokens[1]) == ('fold', 'along')
+  axis, value = tokens[2].split('=')
+  return (axis, value |> int)
+
+with open('./inputs/day13.txt') as infile:
+  # parse points
+  points = []
+  line = infile.readline().strip()
+  while line != '':
+    points.append(line.split(',') |> map$(int)..>tuple)
+    line = infile.readline().strip()
+  
+  folds = infile.readlines() |> map$(parse_fold)..>list
+
+def fold_point(along_axis, axis_value, (px, py)):
+  match along_axis:
+    case 'x':
+      # point disappears
+      if px == axis_value:
+        return None
+      nx = axis_value - (px - axis_value) if px > axis_value else px
+      return (nx, py)
+    case 'y':
+      if py == axis_value:
+        return None
+      ny = axis_value - (py - axis_value) if py > axis_value else py
+      return (px, ny)
+
+part1_ans = None
+remaining_points = set(points)
+for along_axis, axis_value in folds:
+  new_points = remaining_points |> map$(fold_point$(along_axis, axis_value)) |> filter$(p -> p is not None) |> set
+  if part1_ans is None:
+    part1_ans = new_points |> len
+  remaining_points = new_points
+print(f'part 1 = {part1_ans}')
+
+max_x = remaining_points |> map$(.[0])..>max
+max_y = remaining_points |> map$(.[1])..>max
+
+grid = range(max_y+1) |> map$(_->range(max_x+1)|>map$(_->'⬛')..>list)..>list
+
+for point in remaining_points:
+  x, y = point
+  grid[y][x] = '🟥'
+
+# just eyeball the result
+print('part 2 (grid):')
+print(grid |> map$(''.join) |> '\n'.join)
