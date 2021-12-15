@@ -1,0 +1,78 @@
+from heapq import heappush, heappop
+from functools import cache
+
+with open('./inputs/day15.txt') as infile:
+  risk_levels = infile.readlines() |> map$(.strip()..>map$(int)..>list)..>list
+
+pq = [(0, (0, 0))]
+visited = set()
+
+max_row = len(risk_levels)
+max_col = len(risk_levels[0])
+destination = (max_row - 1, max_col - 1)
+adj_diffs = [(1, 0), (-1, 0), (0, 1), (0, -1)]
+def valid_coord((row, col)) = 0 <= row < max_row and 0 <= col < max_col
+def adj_points((row, col)) = adj_diffs |> map$(def ((dr, dc)) -> (row+dr, col+dc))..>filter$(valid_coord)
+
+least_total_risk = None
+while len(pq):
+  total_risk, coord = heappop(pq)
+  if coord in visited:
+    continue
+  row, col = coord
+  visited.add(coord)
+
+  if coord == destination:
+    least_total_risk = total_risk
+    break
+
+  for adj_point in adj_points(coord):
+    if adj_point not in visited:
+      adj_r, adj_c = adj_point
+      heappush(pq, (total_risk+risk_levels[adj_r][adj_c], (adj_r, adj_c)))
+
+part1_ans = least_total_risk
+print(f'part 1 = {part1_ans}')
+# end part 1
+
+# part 2 with challenge: no generating full map (use *maths*)
+max_row_full = max_row * 5
+max_col_full = max_col * 5
+
+def valid_coord_full((row, col)) = 0 <= row < max_row_full and 0 <= col < max_col_full
+def adj_points_full((row, col)) = adj_diffs |> map$(def ((dr, dc)) -> (row+dr, col+dc))..>filter$(valid_coord_full)
+@cache
+def risk_at((row, col)):
+  if row < max_row and col < max_col:
+    return risk_levels[row][col]
+  
+  new_row, new_col = row, col
+  if row >= max_row:
+    new_row -= max_row
+  elif col >= max_col:
+    new_col -= max_col
+  
+  base_risk = risk_at((new_row, new_col))
+  return max(1, (1+base_risk)%10)
+
+destination_full = (max_row_full-1, max_col_full-1)
+
+pq = [(0, (0, 0))]
+visited = set()
+least_total_risk_full = None
+while len(pq):
+  total_risk, coord = heappop(pq)
+  if coord in visited:
+    continue
+  visited.add(coord)
+
+  if coord == destination_full:
+    least_total_risk_full = total_risk
+    break
+
+  for adj_point in adj_points_full(coord):
+    if adj_point not in visited:
+      heappush(pq, (total_risk+risk_at(adj_point), adj_point))
+
+part2_ans = least_total_risk_full
+print(f'part 2 = {part2_ans}')
