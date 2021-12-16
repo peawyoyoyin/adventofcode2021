@@ -1,0 +1,99 @@
+with open('./inputs/day16.txt') as infile:
+  raw_hex_str = infile.readline().strip()
+
+data LiteralValuePacket(version, packet_type, value)
+data OperatorPacket(version, packet_type, length_type, subpackets)
+
+def bits_to_int(bits) = bits |> reduce$((acc, val) -> 2*acc+val, ?, 0)
+def char_to_bits(char) = f'{int(char, 16):04b}' |> map$(int)
+
+def parse_multiple_packets(bits):
+  while True:
+    try:
+      yield parse_bits(bits)
+    except StopIteration: # this is big hack because no hasNext in python iterators :(
+      break
+    except IndexError:
+      break
+
+def parse_bits(bits):
+  version = bits$[:3] |> bits_to_int
+  packet_type = bits$[:3] |> bits_to_int
+  if packet_type == 4: # literal value packet
+    value_bits = []
+    continue_bit = 1
+    while continue_bit == 1:
+      group = bits$[:5]
+      continue_bit, *content_bits = group
+      content_bits |> value_bits.extend
+    value = value_bits |> bits_to_int
+    return LiteralValuePacket(version, packet_type, value)
+  else:
+    length_type = bits$[0]
+    match length_type:
+      case 0:
+        subpackets_length = bits$[:15] |> bits_to_int
+        subpackets_bits = bits$[:subpackets_length] |> iter
+        subpackets = subpackets_bits |> parse_multiple_packets..>tuple
+        return OperatorPacket(version, packet_type, length_type, subpackets)
+      case 1:
+        subpackets_left = bits$[:11] |> bits_to_int
+        subpackets = []
+        while subpackets_left > 0:
+          parse_bits(bits) |> subpackets.append
+          subpackets_left -= 1
+        return OperatorPacket(version, packet_type, length_type, subpackets)
+
+def parse_hex_str(hex_str) = hex_str |> map$(char_to_bits)..>flatten |> iter |> parse_bits
+
+match def version_sum(LiteralValuePacket(version, packet_type, value)) = version
+addpattern def version_sum(OperatorPacket(version, packet_type, length_type, subpackets)) = version + (subpackets |> map$(version_sum)..>sum)
+
+assert '8A004A801A8002F478' |> parse_hex_str |> version_sum == 16
+assert '620080001611562C8802118E34' |> parse_hex_str |> version_sum == 12
+assert 'C0015000016115A2E0802F182340' |> parse_hex_str |> version_sum == 23
+assert 'A0016C880162017C3686B18A3D4780' |> parse_hex_str |> version_sum == 31
+
+part1_ans = raw_hex_str |> parse_hex_str |> version_sum
+print(f'part 1 = {part1_ans}')
+
+product = reduce$(*)
+
+match def evaluate_packet(LiteralValuePacket(version, packet_type, value)) = value
+addpattern def evaluate_packet(OperatorPacket(version, packet_type, length_type, subpackets)):
+  subpacket_values = subpackets |> map$(evaluate_packet) |> tuple
+  if packet_type in [5, 6, 7]:
+    assert len(subpacket_values) == 2
+
+  match packet_type:
+    case 0: # sum packet
+      fn = sum
+    case 1: # product packet
+      fn = product
+    case 2: # min packet
+      fn = min
+    case 3: # max packet
+      fn = max
+    case 5: # gt packet
+      fn = def ((A, B)) -> 1 if A > B else 0
+    case 6: # lt packet
+      fn = def ((A, B)) -> 1 if A < B else 0
+    case 7: # eq packet
+      fn = def ((A, B)) -> 1 if A == B else 0
+    case _:
+      raise MatchError(f'unknown packet type {packet_type}') 
+  return subpacket_values |> fn
+
+parse_and_eval = parse_hex_str..>evaluate_packet
+
+assert 'C200B40A82' |> parse_and_eval == 3
+assert '04005AC33890' |> parse_and_eval == 54
+assert '880086C3E88112' |> parse_and_eval == 7
+assert 'CE00C43D881120' |> parse_and_eval == 9
+assert 'D8005AC2A8F0' |> parse_and_eval == 1
+assert 'F600BC2D8F' |> parse_and_eval == 0
+assert '9C005AC2F8F0' |> parse_and_eval == 0
+assert '9C0141080250320F1802104A08' |> parse_and_eval == 1
+
+part2_ans = raw_hex_str |> parse_and_eval
+print(f'part 2 = {part2_ans}')
