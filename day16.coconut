@@ -62,7 +62,7 @@ product = reduce$(*)
 def binary_pred(pred) = def ((A, B)) -> if pred(A, B) then 1 else 0
 match def evaluate_packet(LiteralValuePacket(version, packet_type, value)) = value
 addpattern def evaluate_packet(OperatorPacket(version, packet_type, length_type, subpackets)):
-  subpacket_values = subpackets |> map$(evaluate_packet) |> tuple
+  subpacket_values = subpackets |> map$(evaluate_packet)
   if packet_type in [5, 6, 7]:
     assert len(subpacket_values) == 2
 
@@ -76,11 +76,11 @@ addpattern def evaluate_packet(OperatorPacket(version, packet_type, length_type,
     case 3: # max packet
       fn = max
     case 5: # gt packet
-      fn = binary_pred( (>) )
+      fn = binary_pred( (>) )..tuple
     case 6: # lt packet
-      fn = binary_pred( (<) )
+      fn = binary_pred( (<) )..tuple
     case 7: # eq packet
-      fn = binary_pred( (==) )
+      fn = binary_pred( (==) )..tuple
     case _:
       raise MatchError(f'unknown packet type {packet_type}') 
   return subpacket_values |> fn
