@@ -44,17 +44,17 @@ def parse_bits(bits):
           subpackets_left -= 1
         return OperatorPacket(version, packet_type, length_type, subpackets)
 
-def parse_hex_str(hex_str) = hex_str |> map$(char_to_bits)..>flatten |> iter |> parse_bits
+def parse_hex_str(hex_str) = hex_str |> map$(char_to_bits)..>flatten..>iter..>parse_bits
 
 match def version_sum(LiteralValuePacket(version, packet_type, value)) = version
 addpattern def version_sum(OperatorPacket(version, packet_type, length_type, subpackets)) = version + (subpackets |> map$(version_sum)..>sum)
 
-assert '8A004A801A8002F478' |> parse_hex_str |> version_sum == 16
-assert '620080001611562C8802118E34' |> parse_hex_str |> version_sum == 12
-assert 'C0015000016115A2E0802F182340' |> parse_hex_str |> version_sum == 23
-assert 'A0016C880162017C3686B18A3D4780' |> parse_hex_str |> version_sum == 31
+assert '8A004A801A8002F478' |> parse_hex_str..>version_sum == 16
+assert '620080001611562C8802118E34' |> parse_hex_str..>version_sum == 12
+assert 'C0015000016115A2E0802F182340' |> parse_hex_str..>version_sum == 23
+assert 'A0016C880162017C3686B18A3D4780' |> parse_hex_str..>version_sum == 31
 
-part1_ans = raw_hex_str |> parse_hex_str |> version_sum
+part1_ans = raw_hex_str |> parse_hex_str..>version_sum
 print(f'part 1 = {part1_ans}')
 
 product = reduce$(*)
