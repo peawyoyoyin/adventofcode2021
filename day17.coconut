@@ -43,12 +43,12 @@ yield def vertical_trajectory(viy):
     y += vy
     vy -= 1
 
-yield def trajectory((vix, viy)):
+yield def trajectory(vix, viy):
   yield from zip(horizontal_trajectory(vix), vertical_trajectory(viy))
 
 def valid_initial_horizontal_velocity(vix) = horizontal_trajectory(vix, endless=False) |> map$(valid_x)..>any
 def valid_initial_vertical_velocity(viy) = vertical_trajectory(viy) |> takewhile$(y -> y >= y_min)..>map$(valid_y)..>any
-def valid_initial_velocity((vix, viy)) = trajectory((vix, viy)) |> takewhile$(p -> p[1] >= y_min)..>map$(in_bound)..>any
+def valid_initial_velocity(vix, viy) = trajectory(vix, viy) |> takewhile$(p -> p[1] >= y_min)..>map$(in_bound)..>any
 
 def maximum_height(viy) = if viy <= 0 then 0 else (viy * (viy+1)) // 2
 
@@ -57,7 +57,7 @@ valid_initial_velocities = 0
 
 for vix in range(x_max+1) |> filter$(valid_initial_horizontal_velocity):
   for viy in range(y_min-10, (y_min, y_max) |> map$(abs)..>max) |> filter$(valid_initial_vertical_velocity):
-    if valid_initial_velocity((vix, viy)):
+    if valid_initial_velocity(vix, viy):
       valid_initial_velocities += 1
       max_h = max(max_h, viy |> maximum_height)
 
