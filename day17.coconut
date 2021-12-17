@@ -1,0 +1,67 @@
+import re
+
+input_pattern = r'target area: x=(?P<x1>-?\d+)\.\.(?P<x2>-?\d+), y=(?P<y1>-?\d+)\.\.(?P<y2>-?\d+)'
+def parse_input_str(input_str):
+  matches = input_str |> re.match$(input_pattern) |> .groupdict()
+  x1, x2 = (matches['x1'], matches['x2']) |> map$(int)..>tuple
+  y1, y2 = (matches['y1'], matches['y2']) |> map$(int)..>tuple
+
+  x_bounds = (x1, x2) if x1 <= x2 else (x2, x1)
+  y_bounds = (y1, y2) if y1 <= y2 else (y2, y1)
+
+  return (x_bounds, y_bounds)
+
+with open('./inputs/day17.txt') as infile:
+  x_bounds, y_bounds = infile.readline().strip() |> parse_input_str
+
+x_min, x_max = x_bounds
+y_min, y_max = y_bounds
+
+def valid_x(x) = x_min <= x <= x_max
+def valid_y(y) = y_min <= y <= y_max
+def in_bound((x, y)) = valid_x(x) and valid_y(y)
+
+yield def horizontal_trajectory(vix, endless=True):
+  vx = vix
+  x = 0
+
+  while endless or vx > 0:
+    yield x
+    x += vx
+    
+    if vx > 0:
+      vx -= 1
+    elif vx < 0:
+      vx += 1
+
+yield def vertical_trajectory(viy):
+  vy = viy
+  y = 0
+
+  while True:
+    yield y
+    y += vy
+    vy -= 1
+
+yield def trajectory((vix, viy)):
+  yield from zip(horizontal_trajectory(vix), vertical_trajectory(viy))
+
+def valid_initial_horizontal_velocity(vix) = horizontal_trajectory(vix, endless=False) |> map$(valid_x)..>any
+def valid_initial_vertical_velocity(viy) = vertical_trajectory(viy) |> takewhile$(y -> y >= y_min)..>map$(valid_y)..>any
+def valid_initial_velocity((vix, viy)) = trajectory((vix, viy)) |> takewhile$(p -> p[1] >= y_min)..>map$(in_bound)..>any
+
+def maximum_height(viy) = if viy <= 0 then 0 else (viy * (viy+1)) // 2
+
+max_h = -1
+valid_initial_velocities = 0
+
+for vix in range(x_max+1) |> filter$(valid_initial_horizontal_velocity):
+  for viy in range(y_min-10, (y_min, y_max) |> map$(abs)..>max) |> filter$(valid_initial_vertical_velocity):
+    if valid_initial_velocity((vix, viy)):
+      valid_initial_velocities += 1
+      max_h = max(max_h, viy |> maximum_height)
+
+part1_ans = max_h
+part2_ans = valid_initial_velocities
+print(f'part 1 = {part1_ans}')
+print(f'part 2 = {part2_ans}')
